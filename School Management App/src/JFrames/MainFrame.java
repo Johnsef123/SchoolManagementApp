@@ -17,9 +17,10 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
-        setVisible(true);
+
 
         MainPanel mainPanel = new MainPanel();
         add(mainPanel);
+        setVisible(true);
     }
 }
