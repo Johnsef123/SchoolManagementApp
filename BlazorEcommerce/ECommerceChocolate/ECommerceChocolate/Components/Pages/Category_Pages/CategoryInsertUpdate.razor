@@ -1,0 +1,106 @@
+﻿@page "/Categories/Create"
+@page "/Categories/Update/{id:int}"
+
+@inject ICategoryRepository _categoryRepository
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
+
+
+@if (IsProcessing)
+{
+	<div class="position-absolute w-75 h-75 d-flex flex-column align-items-center bg-white justify-content-center">
+		<img src="/Images/loading.gif" alt="loading" />
+	</div>
+}
+else
+{
+	<div class="card shadow border-0 m-4">
+		<div class="card-header bg-black bg-gradient py-3">
+			<div class="row">
+				<div class="col-12 text-center">
+					<h2 class="text-white py-2">
+						@(Id > 0 ? "Update Category" : "Create New Category")
+					</h2>
+				</div>
+			</div>
+		</div>
+		<div class="card-body p-4">
+			<EditForm Model="Category" FormName="CategoryInsertUpdate" OnValidSubmit="InsertUpdateCategory">
+				<DataAnnotationsValidator/>
+
+				<div class="border-3 p-3 mt-4 ">
+					<div class="form-floating col-12">
+						<InputText class="form-control" id="Name" @bind-Value="Category.Name" placeholder="Category Name"/>
+						<label for="Name">Category Name</label>
+						<ValidationMessage For="@(() => Category.Name)" />
+					</div>
+					
+					<div class="row mt-3">
+						<div class=" col-6 col-md-3">
+							<button type="submit" class="btn btn-primary form-control" disabled="@IsProcessing">
+								<i class="bi bi-floppy-fill"></i> @(Category.Id==0? " Create New Category" : "Update Category")
+							</button>
+						</div>
+						<div class=" col-6 col-md-3">
+							<a href="Categories" class="btn btn-outline-primary form-control" disabled="@IsProcessing">
+								<i class="bi bi-box-arrow-left"></i> Back To List
+							</a>
+						</div>
+					</div>
+
+				</div>
+			</EditForm>
+		</div>
+	</div>
+}
+
+
+
+
+@code {
+	private bool IsProcessing { get; set; } = true;
+
+	[Parameter]
+	public int Id { get; set; }
+
+	[SupplyParameterFromForm]
+	private Category Category { get; set; } = new Category();
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await LoadCategory();
+			IsProcessing = false;
+			StateHasChanged();
+		}
+	}
+
+	private async Task LoadCategory()
+	{
+		if (Id > 0)
+		{
+			Category = await _categoryRepository.GetAsync(Id);
+		}
+	}
+
+	private async Task InsertUpdateCategory()
+	{
+		IsProcessing = true;
+		if (Category.Id == 0)
+		{
+			//create
+			await _categoryRepository.CreateAsync(Category);
+			await _jsRuntime.ToastrSuccess("Category Created Successfully");
+		}
+		else
+		{
+			//update
+			await _categoryRepository.UpdateAsync(Category);
+			await _jsRuntime.ToastrSuccess("Category Updated Successfully");
+		}
+		IsProcessing = false;
+		_navigationManager.NavigateTo("Categories");
+	}
+}
